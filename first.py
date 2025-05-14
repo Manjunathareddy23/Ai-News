@@ -6,18 +6,29 @@ from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
 
+# Get API keys and Google credentials path from environment variables
 GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_CREDENTIALS_PATH")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 DID_API_KEY = os.getenv("DID_API_KEY")
 
 def get_translate_client():
     try:
+        # Load Google credentials from the provided JSON file path
         with open(GOOGLE_CREDENTIALS_PATH) as f:
             creds_dict = json.load(f)
+        
         creds = service_account.Credentials.from_service_account_info(creds_dict)
         return translate.Client(credentials=creds)
+    
+    except FileNotFoundError:
+        st.error(f"Google credentials file not found at {GOOGLE_CREDENTIALS_PATH}. Please check the path.")
+        return None
+    except json.JSONDecodeError:
+        st.error(f"Error decoding the JSON from the credentials file at {GOOGLE_CREDENTIALS_PATH}. Please check the file format.")
+        return None
     except Exception as e:
         st.error(f"Google Translate client error: {e}")
         return None
@@ -118,7 +129,7 @@ def main():
             return
         st.audio(audio_path, format="audio/mp3")
 
-        image_path = "IMG_20250426_180320.jpg"
+        image_path = "reader.jpg"
         if not os.path.exists(image_path):
             st.error("reader.jpg file not found!")
             return
@@ -131,4 +142,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-            
+        
