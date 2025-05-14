@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 from google.cloud import translate_v2 as translate
@@ -7,12 +6,11 @@ import subprocess
 import os
 import json
 from dotenv import load_dotenv
-from google.auth.exceptions import DefaultCredentialsError
 
-# Load environment variables
+# Load .env file
 load_dotenv()
 
-# Load credentials from env variable
+# Load environment variables
 google_credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 DID_API_KEY = os.getenv("DID_API_KEY")
@@ -27,7 +25,7 @@ def get_translate_client():
         st.error(f"Failed to create Google Translate client: {e}")
         return None
 
-# Language detection
+# Detect Language
 def detect_language(text):
     client = get_translate_client()
     if not client:
@@ -39,7 +37,7 @@ def detect_language(text):
         st.error(f"Error detecting language: {e}")
         return None
 
-# Translation
+# Translate Text
 def translate_text(text, target_language):
     client = get_translate_client()
     if not client:
@@ -51,7 +49,7 @@ def translate_text(text, target_language):
         st.error(f"Error translating text: {e}")
         return None
 
-# ElevenLabs TTS
+# Generate Audio using ElevenLabs
 def generate_audio(text, voice="male"):
     try:
         url = "https://api.elevenlabs.io/generate"
@@ -64,19 +62,22 @@ def generate_audio(text, voice="male"):
         st.error(f"Audio generation failed: {e}")
         return None
 
-# Wav2Lip (optional if using D-ID)
+# Lip sync (optional)
 def sync_lips(audio_file, image_file):
     try:
         subprocess.run(["python", "Wav2Lip.py", "--audio", audio_file, "--image", image_file], check=True)
     except Exception as e:
         st.error(f"Lip sync failed: {e}")
 
-# D-ID Video
+# Generate video with D-ID
 def generate_video_with_did(image_file, audio_file):
     try:
         api_url = "https://api.d-id.com/animate"
         headers = {"Authorization": f"Bearer {DID_API_KEY}"}
-        files = {'image': open(image_file, 'rb'), 'audio': open(audio_file, 'rb')}
+        files = {
+            'image': open(image_file, 'rb'),
+            'audio': open(audio_file, 'rb')
+        }
         response = requests.post(api_url, headers=headers, files=files)
         response.raise_for_status()
         return response.json().get("video_url")
@@ -102,7 +103,7 @@ def app():
             return
         st.success(f"Detected Language: {detected_language}")
 
-        # Translate if needed
+        # Translate if necessary
         translated_text = text_input if detected_language == language else translate_text(text_input, target_language=language)
         if not translated_text:
             return
@@ -114,16 +115,22 @@ def app():
             return
         st.audio(audio_url)
 
-        # Save audio file
+        # Download audio
         audio_path = "output_audio.mp3"
-        with open(audio_path, "wb") as f:
-            f.write(requests.get(audio_url).content)
-
-        image_path = "reader.jpg"
-        if not os.path.exists(image_path):
-            st.error("Reader image not found.")
+        try:
+            with open(audio_path, "wb") as f:
+                f.write(requests.get(audio_url).content)
+        except Exception as e:
+            st.error(f"Failed to download audio: {e}")
             return
 
+        # Reader image
+        image_path = "reader.jpg"
+        if not os.path.exists(image_path):
+            st.error("Reader image not found (reader.jpg required in same folder).")
+            return
+
+        # Generate video
         video_url = generate_video_with_did(image_path, audio_path)
         if video_url:
             st.video(video_url)
@@ -132,3 +139,4 @@ def app():
 
 if __name__ == "__main__":
     app()
+    
