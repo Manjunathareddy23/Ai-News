@@ -1,0 +1,6 @@
+streamlit 
+google-cloud-translate 
+google-cloud-language 
+elevenlabs 
+openai 
+requests
