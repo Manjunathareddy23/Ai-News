@@ -84,7 +84,7 @@ def app():
             st.audio(audio_url)
             
             # Generate video with lip syncing using D-ID (or Wav2Lip)
-            image_file = 'path_to_your_reader_image.jpg'  # Set your reader image path
+            image_file = 'IMG_20250426_180320.jpg'  # Set your reader image path
             video_url = generate_video_with_did(image_file, audio_url)
             if video_url:
                 st.video(video_url)
