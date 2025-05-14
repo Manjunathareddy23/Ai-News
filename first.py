@@ -10,12 +10,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Load credentials
 GOOGLE_CREDENTIALS_JSON = os.getenv("GOOGLE_CREDENTIALS_JSON")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 DID_API_KEY = os.getenv("DID_API_KEY")
 
-# Create Google Translate client
 def get_translate_client():
     try:
         creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
@@ -25,7 +23,6 @@ def get_translate_client():
         st.error(f"Google Translate client error: {e}")
         return None
 
-# Detect input language
 def detect_language(text):
     client = get_translate_client()
     if not client:
@@ -37,7 +34,6 @@ def detect_language(text):
         st.error(f"Language detection failed: {e}")
         return None
 
-# Translate text
 def translate_text(text, target):
     client = get_translate_client()
     if not client:
@@ -49,7 +45,6 @@ def translate_text(text, target):
         st.error(f"Translation failed: {e}")
         return None
 
-# Generate audio from ElevenLabs
 def generate_audio(text, voice="Rachel"):
     try:
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}"
@@ -71,7 +66,6 @@ def generate_audio(text, voice="Rachel"):
         st.error(f"Audio generation error: {e}")
         return None
 
-# Generate video using D-ID API
 def generate_video(image_path, audio_path):
     try:
         with open(image_path, "rb") as img_file, open(audio_path, "rb") as audio_file:
@@ -89,13 +83,11 @@ def generate_video(image_path, audio_path):
             )
             response.raise_for_status()
             video_response = response.json()
-            video_url = video_response.get("result_url") or video_response.get("video_url")
-            return video_url
+            return video_response.get("result_url") or video_response.get("video_url")
     except Exception as e:
         st.error(f"Video generation failed: {e}")
         return None
 
-# Streamlit UI
 def main():
     st.title("🗞️ AI News Reader")
     st.write("Paste news content in any language, select language and voice, and generate a speaking news video.")
@@ -115,32 +107,23 @@ def main():
 
         st.success(f"Detected Language: {detected_lang}")
 
-        # Translate
         translated_text = text if detected_lang == target_lang else translate_text(text, target_lang)
         if not translated_text:
             return
         st.write("🔤 Translated Text:")
         st.info(translated_text)
 
-        # Voice mapping
-        voice_map = {
-            "Male": "Adam",
-            "Female": "Rachel"
-        }
-
+        voice_map = {"Male": "Adam", "Female": "Rachel"}
         audio_path = generate_audio(translated_text, voice=voice_map[voice_choice])
         if not audio_path:
             return
-
         st.audio(audio_path, format="audio/mp3")
 
-        # Image file
         image_path = "reader.jpg"
         if not os.path.exists(image_path):
             st.error("reader.jpg file not found!")
             return
 
-        # Generate video
         video_url = generate_video(image_path, audio_path)
         if video_url:
             st.video(video_url)
