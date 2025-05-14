@@ -1,22 +1,21 @@
-
 import streamlit as st
 import requests
 import os
 import json
-import base64
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
 from dotenv import load_dotenv
 
 load_dotenv()
 
-GOOGLE_CREDENTIALS_JSON = os.getenv("GOOGLE_CREDENTIALS_JSON")
+GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_CREDENTIALS_PATH")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 DID_API_KEY = os.getenv("DID_API_KEY")
 
 def get_translate_client():
     try:
-        creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+        with open(GOOGLE_CREDENTIALS_PATH) as f:
+            creds_dict = json.load(f)
         creds = service_account.Credentials.from_service_account_info(creds_dict)
         return translate.Client(credentials=creds)
     except Exception as e:
@@ -119,7 +118,7 @@ def main():
             return
         st.audio(audio_path, format="audio/mp3")
 
-        image_path = "IMG_20250426_180320.jpg"
+        image_path = "reader.jpg"
         if not os.path.exists(image_path):
             st.error("reader.jpg file not found!")
             return
@@ -132,3 +131,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+            
