@@ -2,12 +2,16 @@ import streamlit as st
 import requests
 from google.cloud import translate_v2 as translate
 import subprocess
-import json
+import os
+from dotenv import load_dotenv
 
-# Set up your API keys here
-GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'
-ELEVENLABS_API_KEY = 'YOUR_ELEVENLABS_API_KEY'
-DID_API_KEY = 'YOUR_DID_API_KEY'
+# Load environment variables from .env file
+load_dotenv()
+
+# Get API keys from environment variables
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+DID_API_KEY = os.getenv('DID_API_KEY')
 
 # Google Cloud Language Detection
 def detect_language(text):
