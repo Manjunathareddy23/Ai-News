@@ -119,7 +119,7 @@ def main():
             return
         st.audio(audio_path, format="audio/mp3")
 
-        image_path = "reader.jpg"
+        image_path = "IMG_20250426_180320.jpg"
         if not os.path.exists(image_path):
             st.error("reader.jpg file not found!")
             return
