@@ -125,7 +125,7 @@ def app():
             return
 
         # Reader image
-        image_path = "reader.jpg"
+        image_path = "IMG_20250426_180320.jpg"
         if not os.path.exists(image_path):
             st.error("Reader image not found (reader.jpg required in same folder).")
             return
