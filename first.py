@@ -9,25 +9,25 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Get API keys and Google credentials path from environment variables
-GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_CREDENTIALS_PATH")
+# Get API keys and credentials path from environment variables
+GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_CREDENTIALS_PATH", "credentials.json")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 DID_API_KEY = os.getenv("DID_API_KEY")
 
 def get_translate_client():
     try:
-        # Load Google credentials from the provided JSON file path
+        if not os.path.exists(GOOGLE_CREDENTIALS_PATH):
+            st.error(f"Google credentials file not found at {GOOGLE_CREDENTIALS_PATH}. Please check the path.")
+            return None
+        
         with open(GOOGLE_CREDENTIALS_PATH) as f:
             creds_dict = json.load(f)
         
         creds = service_account.Credentials.from_service_account_info(creds_dict)
         return translate.Client(credentials=creds)
     
-    except FileNotFoundError:
-        st.error(f"Google credentials file not found at {GOOGLE_CREDENTIALS_PATH}. Please check the path.")
-        return None
     except json.JSONDecodeError:
-        st.error(f"Error decoding the JSON from the credentials file at {GOOGLE_CREDENTIALS_PATH}. Please check the file format.")
+        st.error("Error decoding the credentials JSON file.")
         return None
     except Exception as e:
         st.error(f"Google Translate client error: {e}")
@@ -120,6 +120,7 @@ def main():
         translated_text = text if detected_lang == target_lang else translate_text(text, target_lang)
         if not translated_text:
             return
+
         st.write("🔤 Translated Text:")
         st.info(translated_text)
 
@@ -127,9 +128,10 @@ def main():
         audio_path = generate_audio(translated_text, voice=voice_map[voice_choice])
         if not audio_path:
             return
+
         st.audio(audio_path, format="audio/mp3")
 
-        image_path = "IMG_20250426_180320.jpg"
+        image_path = "reader.jpg"
         if not os.path.exists(image_path):
             st.error("reader.jpg file not found!")
             return
@@ -142,4 +144,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-        
+    
