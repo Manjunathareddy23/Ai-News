@@ -1,0 +1,27 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+env/
+
+# Streamlit generated files
+/.streamlit/
+
+# Log files
+*.log
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# API keys (ensure not to push your real keys)
+*.env
+secrets.json
+
+# IDE or Editor files
+.vscode/
+.idea/
+
+# macOS specific files
+.DS_Store
