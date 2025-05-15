@@ -3,7 +3,6 @@ from langdetect import detect
 from gtts import gTTS
 import os
 
-# Check if moviepy is installed
 try:
     from moviepy.editor import *
 except ModuleNotFoundError:
@@ -22,15 +21,12 @@ if st.button("🎬 Generate Video"):
         st.success("✅ Processing started...")
 
         try:
-            # Detect language
             lang = detect(news_text)
             st.info(f"🌐 Detected Language: `{lang}`")
 
-            # Convert text to audio
             tts = gTTS(text=news_text, lang=lang)
             tts.save("news_audio.mp3")
 
-            # Save face image
             with open("input_face.jpg", "wb") as f:
                 f.write(face_img.read())
 
