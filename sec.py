@@ -3,12 +3,6 @@ from langdetect import detect
 from gtts import gTTS
 import os
 
-try:
-    from moviepy.editor import *
-except ModuleNotFoundError:
-    st.error("🚨 `moviepy` module not found. Please ensure it's in `requirements.txt` and restart the app.")
-    st.stop()
-
 st.set_page_config(page_title="AI News Reader", layout="centered")
 st.title("🗞️ AI News Reader (Free Version)")
 
@@ -21,17 +15,23 @@ if st.button("🎬 Generate Video"):
         st.success("✅ Processing started...")
 
         try:
+            # Detect language
             lang = detect(news_text)
             st.info(f"🌐 Detected Language: `{lang}`")
 
+            # Convert text to audio using gTTS
             tts = gTTS(text=news_text, lang=lang)
             tts.save("news_audio.mp3")
 
+            # Save uploaded face image to file
             with open("input_face.jpg", "wb") as f:
                 f.write(face_img.read())
 
             st.info("🌀 Running Wav2Lip...")
-            exit_code = os.system("python Wav2Lip/inference.py --checkpoint_path Wav2Lip/checkpoints/wav2lip_gan.pth --face input_face.jpg --audio news_audio.mp3")
+            exit_code = os.system(
+                "python Wav2Lip/inference.py --checkpoint_path Wav2Lip/checkpoints/wav2lip_gan.pth "
+                "--face input_face.jpg --audio news_audio.mp3"
+            )
 
             video_path = "results/result_voice.mp4"
             if exit_code == 0 and os.path.exists(video_path):
