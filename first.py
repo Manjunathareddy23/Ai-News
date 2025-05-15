@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Get API keys from environment variables
+# API Keys from .env file
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 DID_API_KEY = os.getenv("DID_API_KEY")
 
@@ -18,11 +18,6 @@ def detect_language(text):
     except Exception as e:
         st.error(f"Language detection failed: {e}")
         return None
-
-# ----------------- TRANSLATION (Not available in free version) -----------------
-def translate_text(text, target_lang):
-    st.warning("⚠️ Translation is not available in this free version.")
-    return text
 
 # ----------------- AUDIO GENERATION -----------------
 def generate_audio(text, voice_id):
@@ -46,75 +41,107 @@ def generate_audio(text, voice_id):
         st.error(f"Audio generation error: {e}")
         return None
 
-# ----------------- VIDEO GENERATION -----------------
+# ----------------- VIDEO GENERATION USING D-ID -----------------
 def generate_video(image_path, audio_path):
     try:
-        with open(image_path, "rb") as img_file, open(audio_path, "rb") as audio_file:
-            files = {
-                "source_image": img_file,
-                "script": ("script.mp3", audio_file, "audio/mpeg")
-            }
-            headers = {
-                "Authorization": f"Bearer {DID_API_KEY}"
-            }
-            response = requests.post(
-                "https://api.d-id.com/talks",
+        headers = {
+            "Authorization": f"Bearer {DID_API_KEY}"
+        }
+
+        # Upload image
+        with open(image_path, "rb") as img_file:
+            image_upload = requests.post(
+                "https://api.d-id.com/images",
                 headers=headers,
-                files=files
+                files={"image": img_file}
             )
-            response.raise_for_status()
-            video_response = response.json()
-            return video_response.get("result_url") or video_response.get("video_url")
+            image_upload.raise_for_status()
+            image_url = image_upload.json().get("url")
+
+        # Upload audio
+        with open(audio_path, "rb") as audio_file:
+            audio_upload = requests.post(
+                "https://api.d-id.com/audio",
+                headers=headers,
+                files={"audio": audio_file}
+            )
+            audio_upload.raise_for_status()
+            audio_url = audio_upload.json().get("url")
+
+        # Generate video
+        payload = {
+            "image_url": image_url,
+            "audio_url": audio_url,
+            "driver_url": "default",
+            "config": {
+                "fluent": True,
+                "align_driver": True
+            }
+        }
+
+        video_response = requests.post(
+            "https://api.d-id.com/talks",
+            headers={**headers, "Content-Type": "application/json"},
+            json=payload
+        )
+        video_response.raise_for_status()
+        video_data = video_response.json()
+        video_url = f"https://api.d-id.com/talks/{video_data['id']}/video"
+        return video_url
+
     except Exception as e:
         st.error(f"Video generation failed: {e}")
         return None
 
-# ----------------- STREAMLIT UI -----------------
+# ----------------- MAIN UI -----------------
 def main():
-    st.title("🗞️ AI News Reader (Free Version)")
-    st.write("Paste news content in any language, detect language, and generate a speaking news video.")
+    st.title("🗞️ AI News Reader (ElevenLabs + D-ID)")
+    st.write("Paste any news text. Get an AI video reader with voice & lipsync animation.")
 
-    text = st.text_area("📝 Enter news content")
-    target_lang = st.selectbox("🌐 Output Language (for future use)", ["en", "es", "fr", "hi", "te", "ta", "de"])
-    voice_choice = st.radio("🎤 Voice", ["Male", "Female"])
+    text = st.text_area("📜 Paste your news content here", height=200)
+    voice_choice = st.radio("🎤 Choose Voice", ["Male", "Female"])
+    target_lang = st.selectbox("🌐 Output Language (future use)", ["en", "hi", "te", "ta", "es", "fr", "de"])
 
-    if st.button("🎬 Generate Video"):
+    if st.button("🚀 Generate AI Video"):
         if not text.strip():
-            st.error("❌ Please enter news content.")
+            st.error("❌ Please paste some news content.")
             return
 
-        detected_lang = detect_language(text)
-        if not detected_lang:
+        # Detect language
+        lang = detect_language(text)
+        if not lang:
             return
+        st.success(f"✅ Detected Language: `{lang}`")
 
-        st.success(f"✅ Detected Language: `{detected_lang}`")
+        # Optional Translation (placeholder)
+        st.warning("⚠️ Translation not applied in this free version.")
+        final_text = text
 
-        translated_text = text  # Translation placeholder
-        st.info(f"🔤 Processed Text (No Translation Applied):\n\n{translated_text}")
-
-        # Replace these with your actual voice IDs from ElevenLabs
+        # Voice Mapping (replace with your own voice IDs)
         voice_map = {
-            "Male": "pNInz6obpgDQGcFmaJgB",     # Replace with your ElevenLabs Male voice_id
-            "Female": "21m00Tcm4TlvDq8ikWAM"    # Replace with your ElevenLabs Female voice_id
+            "Male": "pNInz6obpgDQGcFmaJgB",     # Replace with your ElevenLabs male voice_id
+            "Female": "21m00Tcm4TlvDq8ikWAM"    # Replace with your ElevenLabs female voice_id
         }
-
         voice_id = voice_map[voice_choice]
-        audio_path = generate_audio(translated_text, voice_id)
+
+        # Generate Audio
+        audio_path = generate_audio(final_text, voice_id)
         if not audio_path:
             return
-
         st.audio(audio_path, format="audio/mp3")
 
+        # Check image
         image_path = "reader.jpeg"
         if not os.path.exists(image_path):
-            st.error("❌ `reader.jpg` file not found! Please place the image in the same directory.")
+            st.error("❌ 'reader.jpg' file is missing.")
             return
 
+        # Generate Video
         video_url = generate_video(image_path, audio_path)
         if video_url:
             st.video(video_url)
         else:
-            st.error("❌ Video generation failed.")
+            st.error("❌ Failed to generate video.")
 
 if __name__ == "__main__":
     main()
