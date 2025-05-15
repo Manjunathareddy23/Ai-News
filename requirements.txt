@@ -1,30 +1,8 @@
 streamlit
-moviepy
-python-dotenv
-google-cloud-translate
-google-cloud-language
-elevenlabs
-openai
-requests
 langdetect
 gTTS
-
-
-
-# Core Web UI
-streamlit
-
-# Language detection
-langdetect
-
-# Text-to-speech
-gTTS
-
-# Video processing
 moviepy
 imageio[ffmpeg]
-
-# Wav2Lip dependencies
 numpy
 scipy
 torch
@@ -35,14 +13,9 @@ numba
 audioread
 pillow
 tqdm
-
-# Required for Wav2Lip face alignment and audio
 dlib
 face-recognition
 scikit-image
 scikit-learn
 python_speech_features
-
-# Prevent warnings
 future
-
