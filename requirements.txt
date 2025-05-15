@@ -1,7 +1,6 @@
 streamlit
 langdetect
 gTTS
-moviepy
 imageio[ffmpeg]
 numpy
 scipy
