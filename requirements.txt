@@ -6,3 +6,5 @@ elevenlabs
 openai 
 requests
 langdetect
+gTTS
+moviepy
