@@ -9,3 +9,40 @@ requests
 langdetect
 gTTS
 
+
+
+# Core Web UI
+streamlit
+
+# Language detection
+langdetect
+
+# Text-to-speech
+gTTS
+
+# Video processing
+moviepy
+imageio[ffmpeg]
+
+# Wav2Lip dependencies
+numpy
+scipy
+torch
+torchvision
+matplotlib
+opencv-python
+numba
+audioread
+pillow
+tqdm
+
+# Required for Wav2Lip face alignment and audio
+dlib
+face-recognition
+scikit-image
+scikit-learn
+python_speech_features
+
+# Prevent warnings
+future
+
