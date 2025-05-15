@@ -1,0 +1,7 @@
+checkpoint_path = "Wav2Lip/checkpoints/wav2lip_gan.pth"
+if not os.path.isfile(checkpoint_path):
+    if os.path.isfile("wav2lip_gan.pth"):
+        checkpoint_path = "wav2lip_gan.pth"
+    else:
+        st.error("Checkpoint file not found! Please upload 'wav2lip_gan.pth' in 'Wav2Lip/checkpoints/' or root folder.")
+        st.stop()
