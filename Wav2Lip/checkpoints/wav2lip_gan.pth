@@ -1,0 +1,13 @@
+import torch
+
+# Load model checkpoint
+checkpoint_path = "Wav2Lip/checkpoints/wav2lip_gan.pth"
+checkpoint = torch.load(checkpoint_path, map_location='cpu')
+
+# Check top-level keys
+print("Checkpoint Keys:", checkpoint.keys())
+
+# Explore all layer names and their shape
+with open("model_weights_summary.txt", "w") as f:
+    for key, value in checkpoint['state_dict'].items():
+        f.write(f"{key}: {value.shape}\n")
