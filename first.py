@@ -7,9 +7,14 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# API Keys from .env file
+# API Keys
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 DID_API_KEY = os.getenv("DID_API_KEY")
+
+# Validate API keys
+if not ELEVENLABS_API_KEY or not DID_API_KEY:
+    st.error("❌ Missing API keys. Check your .env file.")
+    st.stop()
 
 # ----------------- LANGUAGE DETECTION -----------------
 def detect_language(text):
@@ -38,7 +43,7 @@ def generate_audio(text, voice_id):
             f.write(response.content)
         return audio_path
     except Exception as e:
-        st.error(f"Audio generation error: {e}")
+        st.error(f"🎧 Audio generation error: {e}")
         return None
 
 # ----------------- VIDEO GENERATION USING D-ID -----------------
@@ -55,8 +60,11 @@ def generate_video(image_path, audio_path):
                 headers=headers,
                 files={"image": img_file}
             )
-            image_upload.raise_for_status()
-            image_url = image_upload.json().get("url")
+        if image_upload.status_code == 401:
+            st.error("❌ Unauthorized: Invalid or expired D-ID API key.")
+            return None
+        image_upload.raise_for_status()
+        image_url = image_upload.json().get("url")
 
         # Upload audio
         with open(audio_path, "rb") as audio_file:
@@ -65,10 +73,10 @@ def generate_video(image_path, audio_path):
                 headers=headers,
                 files={"audio": audio_file}
             )
-            audio_upload.raise_for_status()
-            audio_url = audio_upload.json().get("url")
+        audio_upload.raise_for_status()
+        audio_url = audio_upload.json().get("url")
 
-        # Generate video
+        # Create video
         payload = {
             "image_url": image_url,
             "audio_url": audio_url,
@@ -85,15 +93,14 @@ def generate_video(image_path, audio_path):
             json=payload
         )
         video_response.raise_for_status()
-        video_data = video_response.json()
-        video_url = f"https://api.d-id.com/talks/{video_data['id']}/video"
-        return video_url
+        video_id = video_response.json().get("id")
+        return f"https://api.d-id.com/talks/{video_id}/video"
 
     except Exception as e:
-        st.error(f"Video generation failed: {e}")
+        st.error(f"🎬 Video generation failed: {e}")
         return None
 
-# ----------------- MAIN UI -----------------
+# ----------------- MAIN APP -----------------
 def main():
     st.title("🗞️ AI News Reader (ElevenLabs + D-ID)")
     st.write("Paste any news text. Get an AI video reader with voice & lipsync animation.")
@@ -107,41 +114,41 @@ def main():
             st.error("❌ Please paste some news content.")
             return
 
-        # Detect language
+        # Step 1: Detect language
         lang = detect_language(text)
         if not lang:
             return
         st.success(f"✅ Detected Language: `{lang}`")
 
-        # Optional Translation (placeholder)
-        st.warning("⚠️ Translation not applied in this free version.")
+        # Step 2: Translation placeholder
+        st.warning("⚠️ Translation not applied in this version.")
         final_text = text
 
-        # Voice Mapping (replace with your own voice IDs)
+        # Step 3: Choose voice
         voice_map = {
-            "Male": "pNInz6obpgDQGcFmaJgB",     # Replace with your ElevenLabs male voice_id
-            "Female": "21m00Tcm4TlvDq8ikWAM"    # Replace with your ElevenLabs female voice_id
+            "Male": "pNInz6obpgDQGcFmaJgB",
+            "Female": "21m00Tcm4TlvDq8ikWAM"
         }
         voice_id = voice_map[voice_choice]
 
-        # Generate Audio
+        # Step 4: Generate Audio
         audio_path = generate_audio(final_text, voice_id)
         if not audio_path:
             return
         st.audio(audio_path, format="audio/mp3")
 
-        # Check image
+        # Step 5: Check image file
         image_path = "reader.jpeg"
         if not os.path.exists(image_path):
-            st.error("❌ 'reader.jpg' file is missing.")
+            st.error("❌ 'reader.jpg' image not found in project folder.")
             return
 
-        # Generate Video
+        # Step 6: Generate Video
         video_url = generate_video(image_path, audio_path)
         if video_url:
             st.video(video_url)
         else:
-            st.error("❌ Failed to generate video.")
+            st.error("❌ Failed to generate video. Check API key or usage limits.")
 
 if __name__ == "__main__":
     main()
