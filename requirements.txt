@@ -9,13 +9,8 @@ torch
 torchvision
 matplotlib
 opencv-python
-numba
-audioread
 pillow
 tqdm
-dlib
-face-recognition
 scikit-image
 scikit-learn
-python_speech_features
 future
