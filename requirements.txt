@@ -1,9 +1,9 @@
-streamlit 
+streamlit
 python-dotenv
-google-cloud-translate 
-google-cloud-language 
-elevenlabs 
-openai 
+google-cloud-translate
+google-cloud-language
+elevenlabs
+openai
 requests
 langdetect
 gTTS
