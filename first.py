@@ -1,60 +1,30 @@
 import streamlit as st
 import requests
 import os
-import json
-from google.cloud import translate_v2 as translate
-from google.oauth2 import service_account
+from langdetect import detect
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-# Get API keys and credentials path from environment variables
-GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_CREDENTIALS_PATH", "credentials.json")
+# Get API keys from environment variables
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 DID_API_KEY = os.getenv("DID_API_KEY")
 
-def get_translate_client():
-    try:
-        if not os.path.exists(GOOGLE_CREDENTIALS_PATH):
-            st.error(f"Google credentials file not found at {GOOGLE_CREDENTIALS_PATH}. Please check the path.")
-            return None
-        
-        with open(GOOGLE_CREDENTIALS_PATH) as f:
-            creds_dict = json.load(f)
-        
-        creds = service_account.Credentials.from_service_account_info(creds_dict)
-        return translate.Client(credentials=creds)
-    
-    except json.JSONDecodeError:
-        st.error("Error decoding the credentials JSON file.")
-        return None
-    except Exception as e:
-        st.error(f"Google Translate client error: {e}")
-        return None
-
+# ----------------- LANGUAGE DETECTION (using langdetect) -----------------
 def detect_language(text):
-    client = get_translate_client()
-    if not client:
-        return None
     try:
-        result = client.detect_language(text)
-        return result["language"]
+        return detect(text)
     except Exception as e:
         st.error(f"Language detection failed: {e}")
         return None
 
-def translate_text(text, target):
-    client = get_translate_client()
-    if not client:
-        return None
-    try:
-        result = client.translate(text, target_language=target)
-        return result["translatedText"]
-    except Exception as e:
-        st.error(f"Translation failed: {e}")
-        return None
+# ----------------- TRANSLATION (Not available for free here) -----------------
+def translate_text(text, target_lang):
+    st.warning("Translation is not available in this free version.")
+    return text
 
+# ----------------- AUDIO GENERATION -----------------
 def generate_audio(text, voice="Rachel"):
     try:
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}"
@@ -76,6 +46,7 @@ def generate_audio(text, voice="Rachel"):
         st.error(f"Audio generation error: {e}")
         return None
 
+# ----------------- VIDEO GENERATION -----------------
 def generate_video(image_path, audio_path):
     try:
         with open(image_path, "rb") as img_file, open(audio_path, "rb") as audio_file:
@@ -98,12 +69,13 @@ def generate_video(image_path, audio_path):
         st.error(f"Video generation failed: {e}")
         return None
 
+# ----------------- STREAMLIT UI -----------------
 def main():
-    st.title("🗞️ AI News Reader")
-    st.write("Paste news content in any language, select language and voice, and generate a speaking news video.")
+    st.title("🗞️ AI News Reader (Free Version)")
+    st.write("Paste news content in any language, detect language, and generate a speaking news video.")
 
     text = st.text_area("📝 Enter news content")
-    target_lang = st.selectbox("🌐 Output Language", ["en", "es", "fr", "hi", "te", "ta", "de"])
+    target_lang = st.selectbox("🌐 Output Language (for future use)", ["en", "es", "fr", "hi", "te", "ta", "de"])
     voice_choice = st.radio("🎤 Voice", ["Male", "Female"])
 
     if st.button("Generate Video"):
@@ -117,11 +89,10 @@ def main():
 
         st.success(f"Detected Language: {detected_lang}")
 
-        translated_text = text if detected_lang == target_lang else translate_text(text, target_lang)
-        if not translated_text:
-            return
+        # No actual translation — just keep original text
+        translated_text = text  # translate_text(text, target_lang)
 
-        st.write("🔤 Translated Text:")
+        st.write("🔤 Processed Text (No Translation Applied):")
         st.info(translated_text)
 
         voice_map = {"Male": "Adam", "Female": "Rachel"}
@@ -144,4 +115,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
