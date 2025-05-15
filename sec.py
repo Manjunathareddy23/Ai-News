@@ -15,23 +15,33 @@ if st.button("🎬 Generate Video"):
         st.success("✅ Processing started...")
 
         try:
-            # Detect language
             lang = detect(news_text)
             st.info(f"🌐 Detected Language: `{lang}`")
 
-            # Convert text to audio using gTTS
             tts = gTTS(text=news_text, lang=lang)
             tts.save("news_audio.mp3")
 
-            # Save uploaded face image to file
             with open("input_face.jpg", "wb") as f:
                 f.write(face_img.read())
 
-            st.info("🌀 Running Wav2Lip...")
-            exit_code = os.system(
-                "python Wav2Lip/inference.py --checkpoint_path Wav2Lip/checkpoints/wav2lip_gan.pth "
-                "--face input_face.jpg --audio news_audio.mp3"
-            )
+            # Ensure results folder exists
+            if not os.path.exists("results"):
+                os.makedirs("results")
+
+            # Check where your checkpoint actually is:
+            checkpoint_path = "Wav2Lip/checkpoints/wav2lip_gan.pth"
+            if not os.path.isfile(checkpoint_path):
+                # If not there, check root (your current location)
+                if os.path.isfile("wav2lip_gan.pth"):
+                    checkpoint_path = "wav2lip_gan.pth"
+                else:
+                    st.error("❌ Checkpoint file not found! Please upload 'wav2lip_gan.pth' in 'Wav2Lip/checkpoints/' or root folder.")
+                    st.stop()
+
+            command = f"python Wav2Lip/inference.py --checkpoint_path {checkpoint_path} --face input_face.jpg --audio news_audio.mp3"
+            st.info(f"🌀 Running Wav2Lip with command:\n`{command}`")
+
+            exit_code = os.system(command)
 
             video_path = "results/result_voice.mp4"
             if exit_code == 0 and os.path.exists(video_path):
@@ -39,7 +49,7 @@ if st.button("🎬 Generate Video"):
                 with open(video_path, "rb") as f:
                     st.download_button("⬇️ Download Video", f, file_name="AI_News.mp4", mime="video/mp4")
             else:
-                st.error("❌ Video generation failed. Check if Wav2Lip ran correctly and the model file exists.")
+                st.error("❌ Video generation failed. Check logs for errors and confirm model checkpoint exists.")
 
         except Exception as e:
             st.error(f"❌ Error occurred: {str(e)}")
