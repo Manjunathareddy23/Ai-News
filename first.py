@@ -102,9 +102,9 @@ def main():
 
         st.audio(audio_path, format="audio/mp3")
 
-        image_path = "reader.jpg"
+        image_path = "reader.jpeg"
         if not os.path.exists(image_path):
-            st.error("reader.jpg file not found!")
+            st.error("reader.jpeg file not found!")
             return
 
         video_url = generate_video(image_path, audio_path)
