@@ -11,7 +11,7 @@ load_dotenv()
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 DID_API_KEY = os.getenv("DID_API_KEY")
 
-# ----------------- LANGUAGE DETECTION (using langdetect) -----------------
+# ----------------- LANGUAGE DETECTION -----------------
 def detect_language(text):
     try:
         return detect(text)
@@ -19,15 +19,15 @@ def detect_language(text):
         st.error(f"Language detection failed: {e}")
         return None
 
-# ----------------- TRANSLATION (Not available for free here) -----------------
+# ----------------- TRANSLATION (Not available in free version) -----------------
 def translate_text(text, target_lang):
-    st.warning("Translation is not available in this free version.")
+    st.warning("⚠️ Translation is not available in this free version.")
     return text
 
 # ----------------- AUDIO GENERATION -----------------
-def generate_audio(text, voice="Rachel"):
+def generate_audio(text, voice_id):
     try:
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}"
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
             "xi-api-key": ELEVENLABS_API_KEY,
             "Content-Type": "application/json"
@@ -78,25 +78,28 @@ def main():
     target_lang = st.selectbox("🌐 Output Language (for future use)", ["en", "es", "fr", "hi", "te", "ta", "de"])
     voice_choice = st.radio("🎤 Voice", ["Male", "Female"])
 
-    if st.button("Generate Video"):
+    if st.button("🎬 Generate Video"):
         if not text.strip():
-            st.error("Please enter news content.")
+            st.error("❌ Please enter news content.")
             return
 
         detected_lang = detect_language(text)
         if not detected_lang:
             return
 
-        st.success(f"Detected Language: {detected_lang}")
+        st.success(f"✅ Detected Language: `{detected_lang}`")
 
-        # No actual translation — just keep original text
-        translated_text = text  # translate_text(text, target_lang)
+        translated_text = text  # Translation placeholder
+        st.info(f"🔤 Processed Text (No Translation Applied):\n\n{translated_text}")
 
-        st.write("🔤 Processed Text (No Translation Applied):")
-        st.info(translated_text)
+        # Replace these with your actual voice IDs from ElevenLabs
+        voice_map = {
+            "Male": "pNInz6obpgDQGcFmaJgB",     # Replace with your ElevenLabs Male voice_id
+            "Female": "21m00Tcm4TlvDq8ikWAM"    # Replace with your ElevenLabs Female voice_id
+        }
 
-        voice_map = {"Male": "Adam", "Female": "Rachel"}
-        audio_path = generate_audio(translated_text, voice=voice_map[voice_choice])
+        voice_id = voice_map[voice_choice]
+        audio_path = generate_audio(translated_text, voice_id)
         if not audio_path:
             return
 
@@ -104,14 +107,14 @@ def main():
 
         image_path = "reader.jpeg"
         if not os.path.exists(image_path):
-            st.error("reader.jpeg file not found!")
+            st.error("❌ `reader.jpg` file not found! Please place the image in the same directory.")
             return
 
         video_url = generate_video(image_path, audio_path)
         if video_url:
             st.video(video_url)
         else:
-            st.error("Video generation failed.")
+            st.error("❌ Video generation failed.")
 
 if __name__ == "__main__":
     main()
