@@ -5,3 +5,4 @@ google-cloud-language
 elevenlabs 
 openai 
 requests
+langdetect
